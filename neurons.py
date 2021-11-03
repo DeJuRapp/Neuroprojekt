@@ -10,19 +10,27 @@ class Neuron():
   def init_zeros(neurons:int, kernel_dims: np.ndarray) -> np.ndarray:
     '''
     Returns:
-      A (n, kernel_dims) numpy array containing zeros.
+      A numpy array containing zeros such that this array can be passed into propagate.
     '''
 
   @staticmethod
-  def propagate(x:np.ndarray, c:np.ndarray) -> np.ndarray:
+  def propagate(x:np.ndarray, w:np.ndarray) -> np.ndarray:
     '''
-    Propagates the input through a set of RBF neurons defined by the array w.
+    Propagates the input through a set of neurons defined by the array w.
     '''
 
   @staticmethod
-  def back_propagate(x:np.ndarray, c:np.ndarray, y:np.ndarray, derivatives:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+  def back_propagate(x:np.ndarray, w:np.ndarray, y:np.ndarray, derivatives:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     '''
-    Returns the derivatives for c and x.
+    Returns the derivatives for w and x.
+    '''
+
+  @staticmethod
+  def adapt(w:np.ndarray, d_w:np.ndarray, train_rate:float) -> np.ndarray:
+    '''
+    Adapts the weights according to the derivatives.
+
+    Returns the adapted weights.
     '''
 
 class RBF(Neuron):
@@ -47,6 +55,10 @@ class RBF(Neuron):
     '''
     num_neurons = x.shape[0]
     return np.exp(-(np.square(x.reshape(num_neurons, -1) - c.reshape(num_neurons, -1))) / (2 * (STANDARD_DEVIATION ** 2)))
+  
+  @staticmethod
+  def adapt(w:np.ndarray, d_w:np.ndarray, train_rate:float) -> np.ndarray:
+    return w - train_rate * d_w
 
   @staticmethod
   def back_propagate(x:np.ndarray, c:np.ndarray, y:np.ndarray, derivatives:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -70,4 +82,6 @@ class RBF(Neuron):
 
     factor = (x - c) / (STANDARD_DEVIATION ** 2)
 
-    return (-factor * y).reshape(original_shape), (factor * y).reshape(original_shape)
+    deriv = factor * y * derivatives
+
+    return (-deriv).reshape(original_shape), (deriv).reshape(original_shape)
