@@ -80,8 +80,6 @@ class RBF(Neuron):
     x = x.reshape(num_neurons, -1)
     c = c.reshape(num_neurons, -1)
 
-    factor = (x - c) / (STANDARD_DEVIATION ** 2)
-
-    deriv = factor * y * derivatives
+    deriv = ((x - c) / (STANDARD_DEVIATION ** 2)) * y * derivatives
 
     return (-deriv).reshape(original_shape), (deriv).reshape(original_shape)
