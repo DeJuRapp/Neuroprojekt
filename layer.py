@@ -4,11 +4,33 @@ import matplotlib.pyplot as plt
 from neurons import Neuron
 
 class Layer:
-  def propagate(self, image:np.ndarray) -> np.ndarray:
+  def propagate(self, inputs:np.ndarray) -> np.ndarray:
     pass
 
-  def back_propagate(self, image:np.ndarray, derivative:np.ndarray) -> np.ndarray:
+  def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
     pass
+
+class DenseLayer(Layer):
+  neuron_data:np.ndarray
+  old_out:np.ndarray
+  old_in:np.ndarray
+  number_of_neurons:int
+  neuron_type:Neuron
+
+  def __init__(self, input_dimension:np.ndarray, number_of_neurons:int, neuron_type:Neuron):
+    self.neuron_data = neuron_type.init_zeros(number_of_neurons, (input_dimension,))
+    self.number_of_neurons = number_of_neurons
+    self.neuron_type = neuron_type
+
+  def propagate(self, inputs:np.ndarray) -> np.ndarray:
+    self.old_in = inputs
+    self.old_out = self.neuron_type.propagate(inputs, self.neuron_data)
+    return self.old_out
+
+  def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
+    d_w, d_x = self.neuron_type.back_propagate(self.old_in, self.neuron_data, self.old_out, derivative)
+    self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate)
+    return np.sum(d_x, axis=0)
 
 class ConvolutionalLayer(Layer):
 
@@ -51,5 +73,10 @@ class ConvolutionalLayer(Layer):
     self.old_out = self.neuron_type.propagate(inputs, self.neuron_data)
     return self.old_out
 
-  def back_propagate(self, derivative:np.ndarray) -> np.ndarray:
+  def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
     d_w, d_x = self.neuron_type.back_propagate(self.old_in, self.neuron_data, self.old_out, derivative)
+    self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate)
+    derivatives = np.empty_like(self.old_in)
+    for i in range(derivatives.shape[0]):
+      for j in range(derivatives.shape[1]):
+        pass

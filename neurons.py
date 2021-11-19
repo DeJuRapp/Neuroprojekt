@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 
@@ -12,6 +12,7 @@ class Neuron():
     Returns:
       A numpy array containing zeros such that this array can be passed into propagate.
     '''
+    return np.array([])
 
   @staticmethod
   def propagate(x:np.ndarray, w:np.ndarray) -> np.ndarray:
@@ -35,7 +36,7 @@ class Neuron():
 
 class RBF(Neuron):
   @staticmethod
-  def init_zeros(neurons:int, kernel_dims: np.ndarray) -> np.ndarray:
+  def init_zeros(neurons:int, kernel_dims: Tuple[int]) -> np.ndarray:
     '''
     Returns:
       A (n, kernel_dims) numpy array containing zeros.
@@ -53,8 +54,8 @@ class RBF(Neuron):
     Returns:
       y: A (n,) numpy array for the outputs.
     '''
-    num_neurons = x.shape[0]
-    return np.exp(-(np.square(x.reshape(num_neurons, -1) - c.reshape(num_neurons, -1))) / (2 * (STANDARD_DEVIATION ** 2)))
+    num_neurons = c.shape[0]
+    return np.exp(-np.sum(np.square(x.reshape(num_neurons, -1) - c.reshape(num_neurons, -1)), axis=1) / (2 * (STANDARD_DEVIATION ** 2)))
   
   @staticmethod
   def adapt(w:np.ndarray, d_w:np.ndarray, train_rate:float) -> np.ndarray:
