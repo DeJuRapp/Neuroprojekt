@@ -7,12 +7,18 @@ STANDARD_DEVIATION = 1
 
 class Neuron():
   @staticmethod
-  def init_zeros(neurons:int, kernel_dims: np.ndarray) -> np.ndarray:
+  def init_zeros(neurons:int, weight_shape: np.ndarray) -> np.ndarray:
     '''
     Returns:
       A numpy array containing zeros such that this array can be passed into propagate.
     '''
-    return np.array([])
+
+  @staticmethod
+  def init_random(neurons:int, weight_shape: np.ndarray) -> np.ndarray:
+    '''
+    Returns:
+      A numpy array containing random weights such that this array can be passed into propagate.
+    '''
 
   @staticmethod
   def propagate(x:np.ndarray, w:np.ndarray) -> np.ndarray:
@@ -44,6 +50,14 @@ class RBF(Neuron):
     return np.zeros((neurons, *kernel_dims))
 
   @staticmethod
+  def init_random(neurons:int, weight_shape: np.ndarray, min:float, max:float) -> np.ndarray:
+    '''
+    Returns:
+      A numpy array containing random weights such that this array can be passed into propagate.
+    '''
+    return np.random.uniform(min, max, (neurons, *weight_shape))
+
+  @staticmethod
   def propagate(x:np.ndarray, c:np.ndarray) -> np.ndarray:
     '''
     Propagates the input through a set of RBF neurons defined by the array w.
@@ -54,8 +68,7 @@ class RBF(Neuron):
     Returns:
       y: A (n,) numpy array for the outputs.
     '''
-    num_neurons = c.shape[0]
-    return np.exp(-np.sum(np.square(x.reshape(num_neurons, -1) - c.reshape(num_neurons, -1)), axis=1) / (2 * (STANDARD_DEVIATION ** 2)))
+    return np.exp(-np.sum(np.square(x.reshape(x.shape[0], -1) - c.reshape(c.shape[0], -1)), axis=1) / (2 * (STANDARD_DEVIATION ** 2))).reshape(1, c.shape[0])
   
   @staticmethod
   def adapt(w:np.ndarray, d_w:np.ndarray, train_rate:float) -> np.ndarray:
@@ -75,12 +88,6 @@ class RBF(Neuron):
       dy_dc: Derivative of y for c.
       dy_dx: Derivative of y for x.
     '''
-    original_shape = x.shape
-    num_neurons = x.shape[0]
-
-    x = x.reshape(num_neurons, -1)
-    c = c.reshape(num_neurons, -1)
-
-    deriv = ((x - c) / (STANDARD_DEVIATION ** 2)) * y * derivatives
-
-    return (-deriv).reshape(original_shape), (deriv).reshape(original_shape)
+    deriv = ((x.reshape(x.shape[0], -1) - c.reshape(c.shape[0], -1)) / (STANDARD_DEVIATION ** 2))
+    deriv = deriv * y.reshape(c.shape[0], -1) * derivatives.reshape(c.shape[0], -1)
+    return (deriv), (-deriv)

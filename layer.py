@@ -18,19 +18,19 @@ class DenseLayer(Layer):
   neuron_type:Neuron
 
   def __init__(self, input_dimension:np.ndarray, number_of_neurons:int, neuron_type:Neuron):
-    self.neuron_data = neuron_type.init_zeros(number_of_neurons, (input_dimension,))
+    self.neuron_data = neuron_type.init_random(number_of_neurons, (input_dimension,), min=0.0, max=1.0)
     self.number_of_neurons = number_of_neurons
     self.neuron_type = neuron_type
 
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
-    self.old_in = inputs
-    self.old_out = self.neuron_type.propagate(inputs, self.neuron_data)
-    return self.old_out
+    self.old_in = inputs.reshape(1,-1)
+    self.old_out = self.neuron_type.propagate(self.old_in, self.neuron_data)
+    return self.old_out.flatten()
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
     d_w, d_x = self.neuron_type.back_propagate(self.old_in, self.neuron_data, self.old_out, derivative)
     self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate)
-    return np.sum(d_x, axis=0)
+    return np.sum(d_x, axis=0).reshape(1,-1)
 
 class ConvolutionalLayer(Layer):
 
