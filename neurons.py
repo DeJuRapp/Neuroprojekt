@@ -7,18 +7,20 @@ STANDARD_DEVIATION = 1
 
 class Neuron():
   @staticmethod
-  def init_zeros(neurons:int, weight_shape: np.ndarray) -> np.ndarray:
+  def init_zeros(neurons:int, kernel_dims: Tuple[int]) -> np.ndarray:
     '''
     Returns:
-      A numpy array containing zeros such that this array can be passed into propagate.
+      A (n, kernel_dims) numpy array containing zeros.
     '''
+    return np.zeros((neurons, *kernel_dims))
 
   @staticmethod
-  def init_random(neurons:int, weight_shape: np.ndarray) -> np.ndarray:
+  def init_random(neurons:int, weight_shape: np.ndarray, min:float, max:float) -> np.ndarray:
     '''
     Returns:
       A numpy array containing random weights such that this array can be passed into propagate.
     '''
+    return np.random.uniform(min, max, (neurons, *weight_shape))
 
   @staticmethod
   def propagate(x:np.ndarray, w:np.ndarray) -> np.ndarray:
@@ -41,22 +43,6 @@ class Neuron():
     '''
 
 class RBF(Neuron):
-  @staticmethod
-  def init_zeros(neurons:int, kernel_dims: Tuple[int]) -> np.ndarray:
-    '''
-    Returns:
-      A (n, kernel_dims) numpy array containing zeros.
-    '''
-    return np.zeros((neurons, *kernel_dims))
-
-  @staticmethod
-  def init_random(neurons:int, weight_shape: np.ndarray, min:float, max:float) -> np.ndarray:
-    '''
-    Returns:
-      A numpy array containing random weights such that this array can be passed into propagate.
-    '''
-    return np.random.uniform(min, max, (neurons, *weight_shape))
-
   @staticmethod
   def propagate(x:np.ndarray, c:np.ndarray) -> np.ndarray:
     '''
