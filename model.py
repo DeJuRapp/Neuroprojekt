@@ -3,6 +3,7 @@ from neurons import Neuron
 from layer import Layer
 from typing import List
 import loss
+from time import time
 
 class Model:
     layers : List[Layer]
@@ -13,7 +14,8 @@ class Model:
     def __print_progress_bar(self, iteration:int, total_iterations:int, prefix:str = ''):
         total_iterations -= 1
         filledLength = int(100.0 * iteration // total_iterations)
-        print(prefix + f"| {int(filledLength)}% |" + '█' * filledLength + ' ' * (100 - filledLength) + '|', end='\r')
+        output = prefix + f"| {int(filledLength)}% |" + '█' * filledLength + ' ' * (100 - filledLength) + '|'
+        print(output, end='\r')
         if(iteration == total_iterations):
             print()
 
@@ -21,21 +23,20 @@ class Model:
         self.errors = []
         self.losses = []
         print(f"Training model for {epochs} epochs over {train_input.shape[0]} training examples.")
+        start = time()
         for j in range(epochs):
-            order = np.arange(train_input.shape[0])
-            np.random.shuffle(order)
-            
-            for i, example in enumerate(train_input[order]):
-                self.__print_progress_bar(j * train_input.shape[0] + i, train_input.shape[0] * epochs, f"Epoch {j + 1}/{epochs}")
+            self.__print_progress_bar(j, epochs, f"Epoch {j + 1}/{epochs}")
+            for i, example in enumerate(train_input):
                 current_input = example
                 for l in self.layers:
                     current_input = l.propagate(current_input)
-                self.errors.append(np.abs(train_output[order[i]] - current_input[0]))
-                loss_i, deriv = loss_function(current_input[0], train_output[order[i]])
+                self.errors.append(np.abs(train_output[i] - current_input[0]))
+                loss_i, deriv = loss_function(current_input[0], train_output[i])
                 self.losses.append(loss_i)
 
                 for l in reversed(self.layers):
                     deriv = l.back_propagate(deriv, train_rate)
+        print(f"Finished training in {time() - start} seconds.")
 
     def predict(self, input:np.ndarray) -> np.ndarray:
         ret_vals = []

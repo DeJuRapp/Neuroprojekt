@@ -32,6 +32,19 @@ class DenseLayer(Layer):
     self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate)
     return np.sum(d_x, axis=0).reshape(1,-1)
 
+class ClassificationLayer(Layer):
+  old_out:np.ndarray
+  old_in:np.ndarray
+
+  def propagate(self, inputs:np.ndarray) -> np.ndarray:
+    old_in = inputs
+    old_out = np.argmax(inputs)
+    return old_out
+
+  def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
+    return self.old_in * derivative
+
+
 class ConvolutionalLayer(Layer):
 
   neuron_data:np.ndarray
