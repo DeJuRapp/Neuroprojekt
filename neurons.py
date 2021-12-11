@@ -2,7 +2,7 @@ from typing import Tuple, List
 import numpy as np
 
 
-STANDARD_DEVIATION = 1
+STANDARD_DEVIATION = 0.5
 
 
 class Neuron():
