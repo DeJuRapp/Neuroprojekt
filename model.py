@@ -24,8 +24,10 @@ class Model:
         self.losses = []
         print(f"Training model for {epochs} epochs over {train_input.shape[0]} training examples.")
         start = time()
+        avg_epoch_duration = 0.0
         for j in range(epochs):
-            self.__print_progress_bar(j, epochs, f"Epoch {j + 1}/{epochs}")
+            self.__print_progress_bar(j, epochs, f"Epoch {j + 1}/{epochs} | Epoch Duration: {avg_epoch_duration:.2f}s")
+            avg_epoch_duration = -time()
             for i, example in enumerate(train_input):
                 current_input = example
                 for l in self.layers:
@@ -36,6 +38,7 @@ class Model:
 
                 for l in reversed(self.layers):
                     deriv = l.back_propagate(deriv, train_rate)
+            avg_epoch_duration += time()
         print(f"Finished training in {time() - start} seconds.")
 
     def predict(self, input:np.ndarray) -> np.ndarray:
