@@ -30,10 +30,10 @@ class Model:
             epoch_loss = []
             avg_epoch_duration = -time()
             for i, batch in enumerate(train_input):
-                current_input = batch
+                current_input = batch.reshape(1, *batch.shape)
                 for l in self.layers:
                     current_input = l.propagate(current_input)
-                epoch_errors.append(np.average(np.abs(train_output[i] - current_input[:,0])))
+                epoch_errors.append(np.average(np.abs(train_output[i] - current_input[0,:,0])))
                 loss_i, deriv = loss_function(current_input[:,0], train_output[i])
                 epoch_loss.append(np.average(loss_i))
                 deriv = deriv.reshape(1, -1, 1)

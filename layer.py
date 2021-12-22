@@ -18,7 +18,7 @@ class DenseLayer(Layer):
     self.neurons.init_random(number_of_neurons, (input_dimension,), min=0.0, max=1.0)
 
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
-    return self.neurons.propagate(inputs.reshape(1, *inputs.shape))
+    return self.neurons.propagate(inputs)
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
     d_x = self.neurons.back_propagate(derivative, True, train_rate)
