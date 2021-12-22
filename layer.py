@@ -11,40 +11,18 @@ class Layer:
     pass
 
 class DenseLayer(Layer):
-  neuron_data:np.ndarray
-  old_out:np.ndarray
-  old_in:np.ndarray
-  number_of_neurons:int
-  neuron_type:Neuron
-  kwargs:Dict
+  neurons:Neuron
 
-  def __init__(self, input_dimension:np.ndarray, number_of_neurons:int, neuron_type:Neuron, **kwargs):
-    self.neuron_data = neuron_type.init_random(number_of_neurons, (input_dimension,), min=0.0, max=1.0)
-    self.number_of_neurons = number_of_neurons
-    self.neuron_type = neuron_type
-    self.kwargs = kwargs
+  def __init__(self, input_dimension:np.ndarray, number_of_neurons:int, neuron_type:Neuron):
+    self.neurons = neuron_type
+    self.neurons.init_random(number_of_neurons, (input_dimension,), min=0.0, max=1.0)
 
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
-    self.old_in = inputs.reshape(1,-1)
-    self.old_out = self.neuron_type.propagate(self.old_in, self.neuron_data, **self.kwargs)
-    return self.old_out.flatten()
+    return self.neurons.propagate(inputs.reshape(1, *inputs.shape))
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    d_w, d_x = self.neuron_type.back_propagate(self.old_in, self.neuron_data, self.old_out, derivative, **self.kwargs)
-    self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate, **self.kwargs)
-    return np.sum(d_x, axis=0).reshape(1,-1)
-
-class ClassificationLayer(Layer):
-  old_out:np.ndarray
-  old_in:np.ndarray
-
-  def propagate(self, inputs:np.ndarray) -> np.ndarray:
-    self.old_in = inputs
-    self.old_out = np.argmax(inputs)
-    return self.old_out
-
-  def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    return self.old_in * derivative
+    d_x = self.neurons.back_propagate(derivative, True, train_rate)
+    return d_x
 
 
 class ConvolutionalLayer(Layer):
