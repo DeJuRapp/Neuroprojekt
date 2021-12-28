@@ -22,7 +22,7 @@ class DenseLayer(Layer):
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
     d_x = self.neurons.back_propagate(derivative, True, train_rate)
-    return d_x
+    return np.sum(d_x, axis=0).reshape(1, d_x.shape[1], -1)
 
 
 class ConvolutionalLayer(Layer):

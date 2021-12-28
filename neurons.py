@@ -63,7 +63,7 @@ class RBF(Neuron):
     '''
     self.num_neurons = neurons
     self._c = np.random.uniform(min, max, (neurons, 1, *weight_shape))
-    self._b = np.ones((neurons, 1, 1))
+    self._b = np.full((neurons, 1, 1), float(neurons))
 
   def propagate(self, x:np.ndarray) -> np.ndarray:
     '''
