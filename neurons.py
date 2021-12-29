@@ -43,8 +43,6 @@ class RBF(Neuron):
   _W : np.ndarray
   x_c : np.ndarray
   old_y : np.ndarray
-  d_c : np.ndarray
-  d_W :np.ndarray
   matmul_axes:List[Tuple[int]]
 
   def init_random(self, neurons:int, weight_shape: int, min:float, max:float):
@@ -55,7 +53,7 @@ class RBF(Neuron):
     self.num_neurons = neurons
     self._c = np.random.uniform(min, max, (neurons, 1, weight_shape))
     self._W = np.zeros((neurons, 1, weight_shape, weight_shape))
-    self._W[:,:,np.array([(i,i) for i in range(weight_shape)])] = 1.0
+    self._W[:,:,np.array([(i,i) for i in range(weight_shape)])] = weight_shape / 3.0
     self.matmul_axes = [(-2,-1), (-2,-1), (-2,-1)]
 
   @staticmethod
@@ -80,24 +78,16 @@ class RBF(Neuron):
     '''
     Returns the derivatives for x.
     '''
-    self.d_c = np.matmul(2 * self._W, self.x_c, axes=self.matmul_axes)
-    self.d_c = self.d_c.reshape(self.d_c.shape[:-1]) * (self.old_y * derivatives).T
-
-    self.d_W = -np.matmul(self.x_c, self.__transpose(self.x_c), axes=self.matmul_axes) * (self.old_y * derivatives).reshape(1, *self.old_y.shape).T
+    d_c = np.matmul(2 * self._W, self.x_c, axes=self.matmul_axes)
+    d_c = d_c.reshape(d_c.shape[:-1]) * (self.old_y * derivatives).T
 
     if train:
-      self.adapt(train_rate)
+      self._c = self._c - np.sum(train_rate * d_c, axis=1).reshape(self._c.shape)
 
-    return -self.d_c
+      d_W = np.matmul(self.x_c, self.__transpose(self.x_c), axes=self.matmul_axes) * (self.old_y * derivatives).reshape(1, *self.old_y.shape).T
+      self._W = self._W - np.sum(train_rate * d_W, axis=1).reshape(self._W.shape)
 
-  def adapt(self, train_rate:float):
-    '''
-    Adapts the weights according to the derivatives.
-
-    Returns the adapted weights.
-    '''
-    self._c = self._c - np.sum(train_rate * self.d_c, axis=1).reshape(self._c.shape)
-    self._W = self._W - np.sum(train_rate * self.d_W, axis=1).reshape(self._W.shape)
+    return -d_c
 
   @property
   def c(self) -> np.ndarray:
