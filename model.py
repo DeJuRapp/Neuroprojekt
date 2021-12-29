@@ -30,7 +30,7 @@ class Model:
             avg_epoch_duration = -time()
             for i, batch in enumerate(train_input):
                 self.__print_progress_bar(i + train_input.shape[0] * j, train_input.shape[0] *epochs, 
-                                          f"Epoch {j + 1}/{epochs} | Batch {i}/{train_input.shape[0]} | Average Error: {epoch_errors[-1]:.2f}")
+                                          f"Epoch {j + 1}/{epochs} | Batch {i + 1}/{train_input.shape[0]} | Average Error: {epoch_errors[-1]:.2f} ")
                 current_input = batch.reshape(1, *batch.shape)
                 for l in self.layers:
                     current_input = l.propagate(current_input)
@@ -45,7 +45,7 @@ class Model:
             self.losses.append(np.average(np.array(epoch_loss)))
             avg_epoch_duration += time()
         self.__print_progress_bar(epochs, epochs, 
-                                  f"Epoch {epochs}/{epochs} | Batch {train_input.shape[0]}/{train_input.shape[0]} | Average Error: {np.average(np.array(self.errors)):.2f}")
+                                  f"Epoch {epochs}/{epochs} | Batch {train_input.shape[0]}/{train_input.shape[0]} | Average Error: {np.average(np.array(self.errors)):.2f} ")
         print(f"Finished training in {time() - start} seconds.")
 
     def predict(self, input:np.ndarray) -> np.ndarray:
@@ -53,11 +53,11 @@ class Model:
         outputs = []
         for i, batch in enumerate(input):
             current_input = batch.reshape(1, *batch.shape) 
-            self.__print_progress_bar(i, input.shape[0], f"Batch {i + 1}/{input.shape[0]}")
+            self.__print_progress_bar(i, input.shape[0], f"Batch {i + 1}/{input.shape[0]} ")
             for l in self.layers:
                 current_input = l.propagate(current_input)
             outputs.append(current_input)
-        self.__print_progress_bar(input.shape[0], input.shape[0], f"Batch {input.shape[0]}/{input.shape[0]}")
+        self.__print_progress_bar(input.shape[0], input.shape[0], f"Batch {input.shape[0]}/{input.shape[0]} ")
         return np.array(outputs).reshape(input.shape[0], input.shape[1], -1)
 
     def validate(self, input:np.ndarray, expected_output:np.ndarray) -> float:
