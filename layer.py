@@ -15,7 +15,7 @@ class DenseLayer(Layer):
 
   def __init__(self, input_dimension:np.ndarray, number_of_neurons:int, neuron_type:Neuron):
     self.neurons = neuron_type
-    self.neurons.init_random(number_of_neurons, (input_dimension,), min=0.0, max=1.0)
+    self.neurons.init_random(number_of_neurons, input_dimension, min=0.0, max=1.0)
 
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
     return self.neurons.propagate(inputs)
