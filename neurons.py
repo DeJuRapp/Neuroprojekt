@@ -82,10 +82,15 @@ class RBF(Neuron):
     d_c = d_c.reshape(d_c.shape[:-1]) * (self.old_y * derivatives).T
 
     if train:
-      self._c = self._c - np.sum(train_rate * d_c, axis=1).reshape(self._c.shape)
-
       d_W = np.matmul(self.x_c, self.__transpose(self.x_c), axes=self.matmul_axes) * (self.old_y * derivatives).reshape(1, *self.old_y.shape).T
       self._W = self._W - np.sum(train_rate * d_W, axis=1).reshape(self._W.shape)
+      d_W = None
+      
+      self._c = self._c - np.sum(train_rate * d_c, axis=1).reshape(self._c.shape)
+
+    #Delete old stored results
+    self.old_y = None
+    self.x_c = None
 
     return -d_c
 
