@@ -21,7 +21,7 @@ class DenseLayer(Layer):
     return self.neurons.propagate(inputs)
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    d_x = self.neurons.back_propagate(derivative, True, train_rate)
+    d_x = self.neurons.back_propagate(derivative, train_rate)
     return np.sum(d_x, axis=0).reshape(1, d_x.shape[1], -1)
 
 
