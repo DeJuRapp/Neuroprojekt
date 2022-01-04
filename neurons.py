@@ -57,7 +57,7 @@ class RBF(Neuron):
     self.matmul_axes = [(-2,-1), (-2,-1), (-2,-1)]
 
   @staticmethod
-  def __transpose(vector:np.ndarray) -> np.ndarray:
+  def __transpose_batch(vector:np.ndarray) -> np.ndarray:
     '''
     Accepts a vector of shape (neurons, batch, weight, 1) and returns (neurons, batch, 1, weight)
     '''
@@ -69,7 +69,7 @@ class RBF(Neuron):
     '''
     self.x_c:np.ndarray = x - self._c
     self.x_c = self.x_c.reshape(*self.x_c.shape, 1)
-    exponent = np.matmul(self.__transpose(self.x_c), self._W, axes=self.matmul_axes)
+    exponent = np.matmul(self.__transpose_batch(self.x_c), self._W, axes=self.matmul_axes)
     exponent = np.matmul(exponent, self.x_c, axes=self.matmul_axes)
     self.old_y = np.exp(-exponent).reshape(exponent.shape[:-1]).T
     return self.old_y
@@ -82,7 +82,7 @@ class RBF(Neuron):
     d_c = d_c.reshape(d_c.shape[:-1]) * (self.old_y * derivatives).T
 
     if train:
-      d_W = np.matmul(self.x_c, self.__transpose(self.x_c), axes=self.matmul_axes) * (self.old_y * derivatives).reshape(1, *self.old_y.shape).T
+      d_W = np.matmul(self.x_c, self.__transpose_batch(self.x_c), axes=self.matmul_axes) * (self.old_y * derivatives).reshape(1, *self.old_y.shape).T
       self._W = self._W - np.sum(train_rate * d_W, axis=1).reshape(self._W.shape)
       d_W = None
       
