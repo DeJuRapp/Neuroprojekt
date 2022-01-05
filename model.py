@@ -38,10 +38,11 @@ class Model:
 
                 for l in reversed(self.layers):
                     deriv = l.back_propagate(deriv, train_rate)
-            self.losses.append(np.average(np.array(epoch_loss[1:])))
+            self.losses.append(epoch_loss[1:])
             avg_epoch_duration += time()
         self.__print_progress_bar(epochs, epochs, 
                                   f"Epoch {epochs}/{epochs} | Batch {train_input.shape[0]}/{train_input.shape[0]} | Average Error: {np.average(np.array(self.losses)):.2f} ")
+        self.losses = np.array(self.losses).flatten()
         print(f"Finished training in {time() - start} seconds.")
 
     def predict(self, input:np.ndarray) -> np.ndarray:
