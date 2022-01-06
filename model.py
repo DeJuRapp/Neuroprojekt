@@ -57,8 +57,8 @@ class Model:
         self.__print_progress_bar(input.shape[0], input.shape[0], f"Batch {input.shape[0]}/{input.shape[0]} ")
         return np.array(outputs).reshape(input.shape[0], input.shape[1], -1)
 
-    def validate(self, input:np.ndarray, expected_output:np.ndarray) -> float:
+    def validate(self, input:np.ndarray, expected_output:np.ndarray, loss_function=loss.quadratic_error) -> float:
         output = self.predict(input)
         print("Validtaing outputs.")
-        error = np.abs(output - expected_output)
+        error, _ = loss_function(output, expected_output)
         return np.average(error)

@@ -53,6 +53,33 @@ class RBF(Neuron):
     self._c = np.random.uniform(min, max, (neurons, 1, weight_shape))
     self._sigma = np.full((neurons, 1, weight_shape), np.sqrt(weight_shape) * (max-min) / np.sqrt(2 * neurons))
 
+  def subsample_EM_init(self, sample_data:np.ndarray, sample_labels:np.ndarray) -> np.ndarray:
+    '''
+    Initializes the weights of the neurons based on the samples.
+    For each sample, one neuron is created.
+
+    The function assumes a one-hot-encoding for the sample labels.
+
+    Args:
+      sample_data: A (n,m) numpy array, where n is the number of samples, and m the dimension
+                   of the sample vector.
+      sample_labels: A (n,k) numpy array, where n is the number of samples and k the dimension
+                     for the label encoding.
+    Returns:
+      A (n, n) numpy array of the feature space for each sample.
+    '''
+    self._c = sample_data.copy().reshape(sample_data.shape[0], 1, sample_data.shape[1])
+    #Preselect number of examples per label
+    #Calculate the variance per label.
+    for i in range(sample_labels.shape[1]):
+      indices = np.where(sample_labels[:,i] == 1.0)[0]
+      for index in indices:
+        self._sigma[index,0] = np.mean(np.square(sample_data[indices] - sample_data[index]),axis=0)
+        self._sigma[index,0] = np.where(self._sigma[index,0] == 0.0, 1.0e-8, self._sigma[index,0])
+    features = self.propagate(sample_data.reshape(1, *sample_data.shape))
+    self.old_x = self.old_y = None
+    return features.reshape(-1, sample_data.shape[0])
+
   def propagate(self, x:np.ndarray) -> np.ndarray:
     '''
     Propagates the input through a set of neurons defined by the array w.

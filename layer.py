@@ -17,6 +17,9 @@ class DenseLayer(Layer):
     self.neurons = neuron_type
     self.neurons.init_random(number_of_neurons, input_dimension, min=0.0, max=1.0)
 
+  def subsample_EM_init(self, sample_data:np.ndarray, sample_labels:np.ndarray) -> np.ndarray:
+    return self.neurons.subsample_EM_init(sample_data, sample_labels)
+
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
     return self.neurons.propagate(inputs)
 
