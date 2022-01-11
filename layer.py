@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from neurons import Neuron
@@ -27,52 +27,85 @@ class DenseLayer(Layer):
     d_x = self.neurons.back_propagate(derivative, train_rate)
     return np.sum(d_x, axis=0).reshape(1, d_x.shape[1], -1)
 
+class BatchNorm(Layer):
+
+  gamma:np.ndarray
+  beta:np.ndarray
+  epsilon:float
+  mu:np.ndarray
+  sigma_sqrd:np.ndarray
+  rescaled_x:np.ndarray
+
+  def __init__(self, epsilon:float, input_dimension:int):
+    self.epsilon = epsilon
+    self.gamma = np.random.uniform(0.0, 1.0, (1, 1, input_dimension))
+    self.beta = np.random.uniform(0.0, 1.0, (1, 1, input_dimension))
+
+  def propagate(self, inputs:np.ndarray) -> np.ndarray:
+    #Calculate mean and variance
+    self.mu = np.average(inputs, axis=1)
+    x_minus_mu = inputs - self.mu
+    self.sigma_sqrd = np.average(np.square(x_minus_mu), axis=1)
+    #Rescale inputs
+    self.rescaled_x = x_minus_mu / np.sqrt(self.sigma_sqrd + self.epsilon)
+    return self.gamma * self.rescaled_x + self.beta
+
+  def back_propagate(self, derivative: np.ndarray, train_rate: float) -> np.ndarray:
+    pass
+      
+
 
 class ConvolutionalLayer(Layer):
 
-  neuron_data:np.ndarray
-  old_out:np.ndarray
-  old_in:np.ndarray
-  kernel_dimension:List[int]
-  horizontal_stride:int
-  vertical_stride:int
+  neurons:Neuron
+  kernel_dimension:int
+  stride:int
   num_horizontal:int
   num_vertical:int
-  neuron_type:Neuron
+  original_shape:Tuple[int]
 
-  def __init__(self, input_dimension:np.ndarray, stride_horizontal:int, stride_vertical:int, kernel_dimensions:List[int], neuron_type:Neuron):
-    if (input_dimension[2] % kernel_dimensions[2]) != 0:
-      raise ValueError("Color channel cannot be mapped by this kernel shape.")
+  def __init__(self, input_dimension:Tuple[int], stride:int, kernel_dimensions:int, neuron_type:Neuron):
 
-    self.num_horizontal = int((input_dimension[0] - int(kernel_dimensions[0] / 2) - 1) / stride_horizontal)
-    self.num_vertical = int((input_dimension[1] - int(kernel_dimensions[0] / 2) - 1) / stride_vertical)
+    self.original_shape = input_dimension
+
+    self.num_horizontal = int((input_dimension[2] - int(kernel_dimensions / 2) - 1) / stride)
+    self.num_vertical = int((input_dimension[3] - int(kernel_dimensions / 2) - 1) / stride)
 
     self.kernel_dimension = kernel_dimensions
-    self.vertical_stride = stride_vertical
-    self.horizontal_stride = stride_horizontal
+    self.stride = stride
 
-    self.neuron_type = neuron_type
-
-    self.neuron_data = neuron_type.init_zeros(self.num_horizontal * self.num_vertical, kernel_dimensions)
-    self.old_in = np.empty((self.neuron_data.shape[0], *self.kernel_dimension))
+    self.neurons = neuron_type
+    neuron_type.init_random(self.num_horizontal * self.num_vertical, kernel_dimensions**2, 0.0, 1.0)
   
-  def __create_sub_images(self, image:np.ndarray) -> np.ndarray:
+  def __create_sub_images(self, images:np.ndarray) -> np.ndarray:
+    '''
+    Args:
+      image: Should be a batch of images with the shape (1, batch, width, height)
+    '''
+    #Shape (neurons, batch, kernel_x1, kernel_x2)
+    sub_images = np.empty((self.num_horizontal * self.num_vertical, images.shape[1], self.kernel_dimension, self.kernel_dimension))
     neuron_index = 0
-    for i in range(0, image.shape[0] - int(self.kernel_dimension[0] / 2) - 1, self.horizontal_stride):
-      for j in range(0, image.shape[1] - int(self.kernel_dimension[1] / 2) - 1, self.vertical_stride):
-        self.old_in[neuron_index] = image[i:i+self.kernel_dimension[0], j:j+self.kernel_dimension[1], 0:3]
+    for i in range(0, images.shape[2] - int(self.kernel_dimension / 2) - 1, self.stride):
+      for j in range(0, images.shape[3] - int(self.kernel_dimension / 2) - 1, self.stride):
+        sub_images[neuron_index] = images[0, :, i:i+self.kernel_dimension, j:j+self.kernel_dimension]
         neuron_index += 1
-    return self.old_in
+    return sub_images.reshape(neuron_index, images.shape[1], -1)
+
+  def __re_assemble_derivatives(self, derivatives:np.ndarray) -> np.ndarray:
+    '''
+    Inverts the __create_sub_images function for the derivatives.
+
+    Args:
+      derivatives: Should be the value returned by neurons.back_propagate
+    '''
+    image_derivative = np.zeros(self.original_shape)
+    for i in range(self.num_horizontal):
+      for j in range(self.num_vertical):
+        image_derivative[0,:,]
 
   def propagate(self, image:np.ndarray) -> np.ndarray:
-    inputs = self.__create_sub_images(image)
-    self.old_out = self.neuron_type.propagate(inputs, self.neuron_data)
-    return self.old_out
+    return self.neurons.propagate(self.__create_sub_images(image))
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    d_w, d_x = self.neuron_type.back_propagate(self.old_in, self.neuron_data, self.old_out, derivative)
-    self.neuron_data = self.neuron_type.adapt(self.neuron_data, d_w, train_rate)
-    derivatives = np.empty_like(self.old_in)
-    for i in range(derivatives.shape[0]):
-      for j in range(derivatives.shape[1]):
-        pass
+    d_x = self.neurons.back_propagate(derivative, train_rate)
+    return self.__re_assemble_derivatives(d_x)

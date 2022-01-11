@@ -22,17 +22,10 @@ class Neuron():
     Propagates the input through a set of neurons defined by the array w.
     '''
 
-  def back_propagate(self, derivatives:np.ndarray, train:bool=True, train_rate:float=0.1) -> np.ndarray:
+  def back_propagate(self, derivatives:np.ndarray, train_rate:float=0.1) -> np.ndarray:
     '''
-    Returns the derivatives for w and x.
-    '''
-
-  def adapt(self, train_rate:float):
-    '''
-    Adapts the weights according to the derivatives.
-
-    Returns the adapted weights.
-    '''
+    Returns the derivatives for x.
+    ''' 
 
 class RBF(Neuron):
   '''
