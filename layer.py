@@ -21,10 +21,11 @@ class DenseLayer(Layer):
     return self.neurons.subsample_EM_init(sample_data, sample_labels)
 
   def propagate(self, inputs:np.ndarray) -> np.ndarray:
-    return self.neurons.propagate(inputs)
+    #Make sure that the input have the correct shape for the neurons.
+    return self.neurons.propagate(inputs.reshape(*inputs.shape[:2], -1))
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    d_x = self.neurons.back_propagate(derivative, train_rate)
+    d_x = self.neurons.back_propagate(derivative.reshape(*derivative.shape[:2], -1), train_rate)
     return np.sum(d_x, axis=0).reshape(1, d_x.shape[1], -1)
 
 class BatchNorm(Layer):
@@ -66,7 +67,7 @@ class ConvolutionalLayer(Layer):
 
   def __init__(self, input_dimension:Tuple[int], stride:int, kernel_dimensions:int, neuron_type:Neuron):
 
-    self.original_shape = input_dimension
+    self.original_shape = (1, *input_dimension[1:])
 
     self.num_horizontal = int((input_dimension[2] - int(kernel_dimensions / 2) - 1) / stride)
     self.num_vertical = int((input_dimension[3] - int(kernel_dimensions / 2) - 1) / stride)
@@ -85,8 +86,8 @@ class ConvolutionalLayer(Layer):
     #Shape (neurons, batch, kernel_x1, kernel_x2)
     sub_images = np.empty((self.num_horizontal * self.num_vertical, images.shape[1], self.kernel_dimension, self.kernel_dimension))
     neuron_index = 0
-    for i in range(0, images.shape[2] - int(self.kernel_dimension / 2) - 1, self.stride):
-      for j in range(0, images.shape[3] - int(self.kernel_dimension / 2) - 1, self.stride):
+    for i in range(0, images.shape[2] - int(self.kernel_dimension / 2) - self.stride, self.stride):
+      for j in range(0, images.shape[3] - int(self.kernel_dimension / 2) - self.stride, self.stride):
         sub_images[neuron_index] = images[0, :, i:i+self.kernel_dimension, j:j+self.kernel_dimension]
         neuron_index += 1
     return sub_images.reshape(neuron_index, images.shape[1], -1)
@@ -98,14 +99,21 @@ class ConvolutionalLayer(Layer):
     Args:
       derivatives: Should be the value returned by neurons.back_propagate
     '''
+    derivatives = derivatives.reshape(*derivatives.shape[0:2], self.kernel_dimension, self.kernel_dimension)
     image_derivative = np.zeros(self.original_shape)
+    neuron_index = 0
     for i in range(self.num_horizontal):
       for j in range(self.num_vertical):
-        image_derivative[0,:,]
+        image_derivative[0,:,
+          i*self.stride:i*self.stride+self.kernel_dimension,
+          j*self.stride:j*self.stride+self.kernel_dimension] += derivatives[neuron_index]
+        neuron_index += 1
+    return image_derivative
 
   def propagate(self, image:np.ndarray) -> np.ndarray:
-    return self.neurons.propagate(self.__create_sub_images(image))
+    prediction = self.neurons.propagate(self.__create_sub_images(image))
+    return prediction.reshape(*prediction.shape[:2], self.num_horizontal, self.num_vertical)
 
   def back_propagate(self, derivative:np.ndarray, train_rate:float) -> np.ndarray:
-    d_x = self.neurons.back_propagate(derivative, train_rate)
+    d_x = self.neurons.back_propagate(derivative.reshape(*derivative.shape[:2], -1), train_rate)
     return self.__re_assemble_derivatives(d_x)
