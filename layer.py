@@ -69,8 +69,8 @@ class ConvolutionalLayer(Layer):
 
     self.original_shape = (1, *input_dimension[1:])
 
-    self.num_horizontal = int((input_dimension[2] - int(kernel_dimensions / 2) - 1) / stride)
-    self.num_vertical = int((input_dimension[3] - int(kernel_dimensions / 2) - 1) / stride)
+    self.num_horizontal = int(np.ceil((input_dimension[2] - kernel_dimensions) / stride))
+    self.num_vertical = int(np.ceil((input_dimension[3] - kernel_dimensions) / stride))
 
     self.kernel_dimension = kernel_dimensions
     self.stride = stride
@@ -86,8 +86,8 @@ class ConvolutionalLayer(Layer):
     #Shape (neurons, batch, kernel_x1, kernel_x2)
     sub_images = np.empty((self.num_horizontal * self.num_vertical, images.shape[1], self.kernel_dimension, self.kernel_dimension))
     neuron_index = 0
-    for i in range(0, images.shape[2] - int(self.kernel_dimension / 2) - self.stride, self.stride):
-      for j in range(0, images.shape[3] - int(self.kernel_dimension / 2) - self.stride, self.stride):
+    for i in range(0, images.shape[2] - self.kernel_dimension, self.stride):
+      for j in range(0, images.shape[3] - self.kernel_dimension, self.stride):
         sub_images[neuron_index] = images[0, :, i:i+self.kernel_dimension, j:j+self.kernel_dimension]
         neuron_index += 1
     return sub_images.reshape(neuron_index, images.shape[1], -1)
