@@ -62,3 +62,10 @@ class Model:
         print("Validtaing outputs.")
         error, _ = loss_function(output, expected_output)
         return np.average(error)
+
+    @property
+    def number_of_neurons(self) -> int:
+        num_neurons = 0
+        for l in self.layers:
+            num_neurons += l.neurons.num_neurons
+        return num_neurons

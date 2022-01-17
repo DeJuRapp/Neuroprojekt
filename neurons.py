@@ -5,6 +5,9 @@ class Neuron():
   '''
   The axis order for neurons should always be (neuron, batch, *weights)
   '''
+
+  num_neurons:int
+
   def init_zeros(self, neurons:int, kernel_dims: Tuple[int]):
     '''
     Returns:
